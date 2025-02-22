@@ -1,13 +1,10 @@
+# variables.tf
 # AWS Region
 variable "aws_region" {
   description = "The AWS region to create resources in"
   default     = "us-east-1"
 }
 
-variable "env" {
-  type    = string
-  default = "dev"
-}
 
 # VPC CIDR Block
 variable "cidr_block" {
@@ -15,12 +12,18 @@ variable "cidr_block" {
   default     = "10.0.0.0/16"
 }
 
+# Instance Tenancy (default or dedicated)
+variable "instance_tenancy" {
+  description = "The instance tenancy option for the VPC"
+  default     = "default"
+}
 
 # VPC Name Tag
 variable "vpc_name" {
   description = "The name tag for the VPC"
   default     = "app-vpc"
 }
+
 
 # Public Subnet A
 variable "public_subnet_a_cidr" {
@@ -64,4 +67,9 @@ variable "private_subnet_b_cidr" {
 variable "private_subnet_b_name" {
   description = "Name tag for Private Subnet B"
   default     = "PrivateSubnetB"
+}
+
+variable "env" {
+  type    = string
+  default = "dev"
 }
