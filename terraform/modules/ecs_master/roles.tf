@@ -35,12 +35,12 @@ resource "aws_iam_policy_attachment" "ecs_execution_role_ssm_attachment" {
 resource "aws_iam_policy" "ecs_execution_logging_policy" {
   name        = "ECSExecutionLoggingPolicy"
   description = "Allows ECS Execution Role to push logs to CloudWatch"
-  policy      = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
       {
-        "Effect": "Allow",
-        "Action": [
+        "Effect" : "Allow",
+        "Action" : [
           "logs:CreateLogStream",
           "logs:CreateLogGroup",
           "logs:PutLogEvents",
@@ -55,7 +55,7 @@ resource "aws_iam_policy" "ecs_execution_logging_policy" {
           "ecr:DescribeImages",
           "ecr:ListImages",
         ],
-        "Resource": "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
+        "Resource" : "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
       }
     ]
   })
@@ -190,7 +190,7 @@ resource "aws_iam_policy" "ecs_task_logging" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogStream", "logs:PutLogEvents","logs:CreateLogGroup"]
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:CreateLogGroup"]
         Resource = "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
       }
     ]

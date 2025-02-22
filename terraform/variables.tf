@@ -4,6 +4,16 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "ecr_repo_name" {
+  type    = string
+  default = "jenkins"
+}
+
+variable "s3_bucket_name" {
+  type    = string
+  default = "fargate-jenkins-john-duran"
+}
+
 variable "env" {
   type    = string
   default = "dev"

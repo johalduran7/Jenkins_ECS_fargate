@@ -1,14 +1,13 @@
-# terraform {
-#   cloud {
 
-#     organization = "john-organization"
-#     workspaces {
-#       #name = "app-portfolio"
-#       #tags =  
-#       # set TF_WORKSPACE instead
-#     }
-#   }
-# }
+terraform {
+  backend "s3" {
+    bucket         = "jenkins-terraform-backend-john-duran"
+    key            = "terraform/state.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "jenkins_terraform_backend"
+    encrypt        = true
+  }
+}
 
 terraform {
   required_providers {
