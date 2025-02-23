@@ -16,7 +16,7 @@ variable "s3_bucket_name" {
 
 variable "env" {
   type    = string
-  default = "dev"
+  default = "jenkins"
 }
 
 # VPC CIDR Block

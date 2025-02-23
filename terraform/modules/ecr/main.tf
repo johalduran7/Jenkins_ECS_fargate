@@ -25,7 +25,7 @@ resource "aws_ecr_lifecycle_policy" "ecr_jenkins_policy" {
       "selection": {
         "tagStatus": "any",
         "countType": "imageCountMoreThan",
-        "countNumber": 2
+        "countNumber": 1
       },
       "action": {
         "type": "expire"

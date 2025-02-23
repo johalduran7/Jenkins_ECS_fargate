@@ -28,3 +28,17 @@ variable "JENKINS_AGENT_NAME" {
   default = "ecs"
 }
 
+variable "jenkins_ecr_repository_url" {
+  type    = string
+  default = ""
+}
+
+variable "s3_bucket_name" {
+  type    = string
+  default = "fargate-jenkins-john-duran"
+}
+
+variable "aws_s3_bucket_arn" {
+  type    = string
+  default = ""
+}

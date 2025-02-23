@@ -25,6 +25,27 @@ module "s3" {
   s3_bucket_name = var.s3_bucket_name
 }
 
-# module "ecs" {
-#     source = "./modules/ecs"
+# module "ecs_master" {
+#   source                     = "./modules/ecs_master"
+#   jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
+#   s3_bucket_name             = var.s3_bucket_name
+#   aws_s3_bucket_arn=module.s3.aws_s3_bucket_arn
 # }
+
+module "ec2_master" {
+  source                     = "./modules/ec2_master"
+  jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
+  s3_bucket_name             = var.s3_bucket_name
+  aws_s3_bucket_arn          = module.s3.aws_s3_bucket_arn
+}
+
+module "lambda" {
+  source = "./modules/lambda"
+}
+
+module "eventBridge" {
+  source              = "./modules/eventBridge"
+  lambda_jenkins_arn  = module.lambda.lambda_jenkins_arn
+  lambda_jenkins_name = module.lambda.lambda_jenkins_name
+
+}

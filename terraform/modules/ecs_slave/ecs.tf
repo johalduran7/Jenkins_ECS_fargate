@@ -83,14 +83,10 @@ resource "aws_ecs_task_definition" "jenkins_master_fargate_task" {
   cpu                      = "1024"
   memory                   = "2048"
 
-  #   runtime_platform {
-  #     operating_system_family = "LINUX"
-  #     cpu_architecture        = "X86_64"
-  #   }
 
   # you can define up to 10 containers per task definition
   container_definitions = jsonencode([{
-    name       = "jenkins-agent"
+    name       = "jenkins-master"
     image      = "jenkins/inbound-agent"
     cpu        = 1024
     memory     = 2048
