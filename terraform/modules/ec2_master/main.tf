@@ -37,34 +37,74 @@ resource "aws_instance" "jenkins_master" {
       spot_instance_type = "one-time" # Use "persistent" for long-running workloads
     }
   }
+  root_block_device {
+    volume_size = 8 # Increase to store Jenkins data
+    volume_type = "gp3"
+  }
   user_data = <<-EOF
     #!/bin/bash
+    set -e
+    
+    # Fetch the latest snapshot ID from SSM
+    SNAPSHOT_ID=$(aws ssm get-parameter --name "/jenkins/latest_snapshot_id" --query "Parameter.Value" --output text --region ${var.aws_region} || echo "")
+
     # Install Docker
     sudo yum update -y
     sudo yum install -y docker
     sudo service docker start
     sudo usermod -a -G docker ec2-user
 
-    # Log in to ECR (if needed)
+    # Log in to ECR
     aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${var.jenkins_ecr_repository_url}
 
-    # Pull the Jenkins image from ECR (if needed)
+    # Pull the latest Jenkins image
     docker pull ${var.jenkins_ecr_repository_url}:latest
 
-    LATEST_BACKUP=$(aws s3 ls s3://fargate-jenkins-john-duran/ | grep 'jenkins_volume_backup_' | sort | tail -n 1 | awk '{print $4}')
-    echo "Latest backup: $LATEST_BACKUP"
+    if [[ -z "$SNAPSHOT_ID" || "$SNAPSHOT_ID" == "None" ]]; then
+        echo "No snapshot found. Pulling data from S3 backup."
 
-    # Copy backup from S3
-    aws s3 cp s3://fargate-jenkins-john-duran/$LATEST_BACKUP $HOME/backup.tar.gz
+        # If an extra volume (xvdf) is attached, delete it
+        if lsblk | grep -q "xvdf"; then
+            echo "Unneeded volume found (xvdf). Deleting..."
+            VOLUME_ID=$(aws ec2 describe-volumes --filters Name=attachment.instance-id,Values=$(curl -s http://169.254.169.254/latest/meta-data/instance-id) --query "Volumes[?Attachments[?Device=='/dev/xvdf']].VolumeId" --output text --region ${var.aws_region})
+            aws ec2 detach-volume --volume-id $VOLUME_ID --region ${var.aws_region}
+            aws ec2 delete-volume --volume-id $VOLUME_ID --region ${var.aws_region}
+        fi
+        
+        # Find the latest backup file in S3
+        LATEST_BACKUP=$(aws s3 ls s3://${var.s3_bucket_name}/ | grep 'jenkins_volume_backup_' | sort | tail -n 1 | awk '{print $4}')
+        echo "Latest backup found: $LATEST_BACKUP"
 
-    # Create a directory for Jenkins data
-    mkdir -p $HOME/jenkins_data
-    sudo tar -xzf $HOME/backup.tar.gz -C $HOME/jenkins_data
+        if [[ -n "$LATEST_BACKUP" ]]; then
+            # Download and extract the backup
+            aws s3 cp s3://${var.s3_bucket_name}/$LATEST_BACKUP $HOME/backup.tar.gz
+            mkdir -p $HOME/jenkins_data
+            sudo tar -xzf $HOME/backup.tar.gz -C $HOME/jenkins_data
+        fi
 
+    else
+        echo "Snapshot found: $SNAPSHOT_ID. Restoring from EBS volume."
 
-    # Run the Jenkins container with the restored data
-    docker run -d --name jenkins -p 8080:8080 -v $HOME/jenkins_data:/var/jenkins_home ${var.jenkins_ecr_repository_url}:latest
+        # Check if the extra volume is attached
+        if lsblk | grep -q "xvdf"; then
+            echo "Mounting attached volume..."
+            sudo mkdir -p /mnt/jenkins
+            sudo mount /dev/xvdf /mnt/jenkins
+
+            echo "Copying data to Docker volume..."
+            mkdir -p $HOME/jenkins_data
+            sudo rsync -av /mnt/jenkins/ /home/ec2-user/jenkins_data/
+
+            echo "Unmounting and deleting attached volume..."
+            sudo umount /mnt/jenkins
+            aws ec2 delete-volume --volume-id $(lsblk -no UUID /dev/xvdf) --region ${var.aws_region}
+        fi
+    fi
+
+    # Run Jenkins in Docker with the restored data
+    docker run -d --name jenkins -p 8080:8080 -v /home/ec2-user/jenkins_data:/var/jenkins_home ${var.jenkins_ecr_repository_url}:latest
   EOF
+
   tags = {
     Name      = "jenkins_master"
     Terraform = "yes"

@@ -42,7 +42,9 @@ resource "aws_iam_policy" "snapshot_policy" {
         "ec2:DescribeInstances",
         "ec2:DescribeSnapshots",
         "ec2:DeleteSnapshot",
-        "ec2:TagResource"
+        "ec2:TagResource",
+        "ec2:CreateTags"
+
       ]
       Resource = "*"
     }]
@@ -53,4 +55,25 @@ resource "aws_iam_policy" "snapshot_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_snapshot_attach" {
   role       = aws_iam_role.lambda_role_jenkins.name
   policy_arn = aws_iam_policy.snapshot_policy.arn
+}
+
+resource "aws_iam_policy" "ssm_update_parameter_policy" {
+  name        = "SSMUpdateParameterPolicy"
+  description = "Policy to allow updating Parameter Store values"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ssm:PutParameter"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ssm_update_policy" {
+  policy_arn = aws_iam_policy.ssm_update_parameter_policy.arn
+  role       = aws_iam_role.lambda_role_jenkins.name
 }

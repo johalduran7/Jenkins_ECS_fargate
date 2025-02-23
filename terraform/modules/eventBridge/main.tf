@@ -2,15 +2,13 @@ resource "aws_cloudwatch_event_rule" "instance_shutdown" {
   name        = "instance-shutdown"
   description = "Trigger Lambda when EC2 instance is about to be shut down"
 
-  event_pattern = <<PATTERN
-{
-  "source": ["aws.ec2"],
-  "detail-type": ["EC2 Instance State-change Notification"],
-  "detail": {
-    "state": ["shutting-down", "stopping"]
-  }
-}
-PATTERN
+  event_pattern = jsonencode({
+    source        = ["aws.ec2"]
+    "detail-type" = ["EC2 Instance State-change Notification"]
+    detail = {
+      state = ["shutting-down", "terminated"]
+    }
+  })
 }
 
 resource "aws_cloudwatch_event_target" "trigger_lambda" {
@@ -24,6 +22,6 @@ resource "aws_lambda_permission" "eventbridge_permission" {
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_jenkins_name
   principal     = "events.amazonaws.com"
-  source_arn    = var.lambda_jenkins_arn
+  source_arn    = aws_cloudwatch_event_rule.instance_shutdown.arn
 }
 

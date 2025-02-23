@@ -146,3 +146,29 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+
+# EC2 to delete volumes:
+resource "aws_iam_policy" "delete_volume_policy" {
+  name        = "EC2DeleteVolumePolicy"
+  description = "Policy to allow EC2 instances to delete EBS volumes with the Name 'jenkins_backup'"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ec2:DeleteVolume"
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "ec2:ResourceTag/Name" = "jenkins_backup"
+          }
+        }
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "ec2_delete_volume_policy_attachment" {
+  policy_arn = aws_iam_policy.delete_volume_policy.arn
+  role       = aws_iam_role.ec2_execution_role.name
+}

@@ -45,16 +45,16 @@ fi
 echo "✅ Jenkins volume '$JENKINS_VOLUME' archived as '$BACKUP_FILE'"
 
 # Upload backup to S3
-# aws s3 cp "$TMP_DIR/$BACKUP_FILE" "s3://$S3_BUCKET/$BACKUP_FILE" --region "$AWS_REGION"
+aws s3 cp "$TMP_DIR/$BACKUP_FILE" "s3://$S3_BUCKET/$BACKUP_FILE" --region "$AWS_REGION"
 
-# if [[ $? -ne 0 ]]; then
-#   echo "❌ Failed to upload backup to S3!"
-#   exit 1
-# fi
+if [[ $? -ne 0 ]]; then
+  echo "❌ Failed to upload backup to S3!"
+  exit 1
+fi
 
 echo "✅ Backup successfully uploaded to s3://$S3_BUCKET/$BACKUP_FILE"
 cd $TMP_DIR
 base64 $BACKUP_FILE > $BACKUP_FILE.base64
 # Clean up temporary files
-#rm -rf "$TMP_DIR"
+rm -rf "$TMP_DIR"
 echo "🧹 Cleaned up temporary files."

@@ -54,7 +54,7 @@ echo "✅ Committed container '$CONTAINER_NAME' as image '$IMAGE_NAME'"
 ECR_URL=$(aws ecr describe-repositories --query "repositories[?repositoryName=='$REPO_NAME'].repositoryUri" --output text)
 
 if [[ -z "$ECR_URL" ]]; then
-  echo "🛠️ ECR repository '$REPO_NAME' not found. Creating it..."
+  echo "🛠️ ECR repository '$REPO_NAME' not found."
   exit 1
 fi
 echo "AWS_REGION: " $AWS_REGION
