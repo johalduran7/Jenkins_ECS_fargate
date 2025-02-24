@@ -43,39 +43,6 @@ def handler(event, context):
             'body': f"Error describing volume {volume_id_param}: {e}"
         }
 
-    # Get the previous snapshots for the volume tagged as 'jenkins_backup'
-    snapshots_response = ec2.describe_snapshots(
-        Filters=[
-            {'Name': 'tag:Name', 'Values': ['jenkins_backup']}
-        ]
-    )
-    
-    snapshots = snapshots_response.get('Snapshots', [])
-    
-    # Debug: Print the number of snapshots found
-    print(f"Found {len(snapshots)} snapshots for volume {volume_id_param} with tag 'jenkins_backup'.")
-    
-    if snapshots:
-        snapshots_sorted = sorted(snapshots, key=lambda x: x['StartTime'], reverse=True)
-        
-        # Debug: Print the sorted snapshots
-        print("Sorted snapshots:")
-        for snap in snapshots_sorted:
-            print(f"Snapshot ID: {snap['SnapshotId']}, StartTime: {snap['StartTime']}")
-        
-        if len(snapshots_sorted) > 1:
-            previous_snapshot = snapshots_sorted[1]
-            print(f"Deleting previous snapshot {previous_snapshot['SnapshotId']}")
-            try:
-                ec2.delete_snapshot(SnapshotId=previous_snapshot['SnapshotId'])
-                print(f"Successfully deleted snapshot {previous_snapshot['SnapshotId']}")
-            except Exception as e:
-                print(f"Error deleting snapshot {previous_snapshot['SnapshotId']}: {e}")
-        else:
-            print("Not enough snapshots to delete the previous one.")
-    else:
-        print("No snapshots found for the volume.")
-
     # Get snapshot tag from environment variable or default to 'jenkins_backup'
     snapshot_tag = os.environ.get('SNAPSHOT_TAG', 'jenkins_backup')
 
@@ -118,6 +85,40 @@ def handler(event, context):
     )
     
     print(f"Updated {parameter_name} to 'null' after backup.")
+
+    # Get the previous snapshots for the volume tagged as 'jenkins_backup'
+    snapshots_response = ec2.describe_snapshots(
+        Filters=[
+            {'Name': 'tag:Name', 'Values': ['jenkins_backup']}
+        ]
+    )
+    
+    snapshots = snapshots_response.get('Snapshots', [])
+    
+    # Debug: Print the number of snapshots found
+    print(f"Found {len(snapshots)} snapshots for volume {volume_id_param} with tag 'jenkins_backup'.")
+    
+    if snapshots:
+        snapshots_sorted = sorted(snapshots, key=lambda x: x['StartTime'], reverse=True)
+        
+        # Debug: Print the sorted snapshots
+        print("Sorted snapshots:")
+        for snap in snapshots_sorted:
+            print(f"Snapshot ID: {snap['SnapshotId']}, StartTime: {snap['StartTime']}")
+        
+        if len(snapshots_sorted) > 1:
+            previous_snapshot = snapshots_sorted[1]
+            print(f"Deleting previous snapshot {previous_snapshot['SnapshotId']}")
+            try:
+                ec2.delete_snapshot(SnapshotId=previous_snapshot['SnapshotId'])
+                print(f"Successfully deleted snapshot {previous_snapshot['SnapshotId']}")
+            except Exception as e:
+                print(f"Error deleting snapshot {previous_snapshot['SnapshotId']}: {e}")
+        else:
+            print("Not enough snapshots to delete the previous one.")
+    else:
+        print("No snapshots found for the volume.")
+
 
     return {
         'statusCode': 200,

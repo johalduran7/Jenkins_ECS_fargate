@@ -10,14 +10,14 @@ output "jenkins_snapshot_id" {
   sensitive = true
 }
 
-# output "SSM_command_session" {
-#   value = module.ec2_master.SSM_command_session
-# }
+output "SSM_command_session" {
+  value = module.ec2_master.SSM_command_session
+}
 
-# output lambda_jenkins_name {
-#   value       = module.lambda.lambda_jenkins_name
-# }
+output lambda_jenkins_name {
+  value       = module.lambda.lambda_jenkins_name
+}
 
-# output lambda_jenkins_arn {
-#   value       = module.lambda.lambda_jenkins_arn
-# }
+output lambda_jenkins_arn {
+  value       = module.lambda.lambda_jenkins_arn
+}
