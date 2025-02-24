@@ -11,6 +11,9 @@ resource "aws_ssm_parameter" "latest_snapshot_id" {
   name  = "/jenkins/latest_snapshot_id"
   type  = "String"
   value = "null" # Start with an empty value
+  lifecycle {
+    ignore_changes = [value] # it prevents the value from being updated after the first run of Terraform.
+  }
 }
 
 data "aws_ssm_parameter" "latest_snapshot_id" {
@@ -26,7 +29,7 @@ locals {
 
 resource "aws_ebs_volume" "jenkins_volume" {
   #count             = length(data.aws_ebs_snapshot.latest_jenkins_snapshot.id) > 0 ? 1 : 0
-  availability_zone = var.instance_az
+  availability_zone = "us-east-1a"
   # If a snapshot exists, use it; otherwise, create a new volume
   snapshot_id = local.jenkins_snapshot_id != "null" ? local.jenkins_snapshot_id : null
   size        = local.jenkins_snapshot_id == "null" ? 4 : null # Set size only for fresh volumes
@@ -37,18 +40,23 @@ resource "aws_ebs_volume" "jenkins_volume" {
     Terraform = "yes"
   }
 }
-resource "aws_volume_attachment" "jenkins_attachment" {
-  device_name = "/dev/xvdf" # Adjust based on your AMI
-  volume_id   = aws_ebs_volume.jenkins_volume.id
-  instance_id = var.instance_id
+
+resource "aws_ssm_parameter" "backupable_volume" {
+  name  = "/jenkins/volume_id"
+  type  = "String"
+  value = "null" # Start with an empty value
+  lifecycle {
+    ignore_changes = [value] # it prevents the value from being updated after the first run of Terraform.
+  }
 }
 
 
-variable "instance_id" {
-  type    = string
-  default = ""
+output "jenkins_volume_id" {
+  value = aws_ebs_volume.jenkins_volume.id
 }
-variable "instance_az" {
-  type    = string
-  default = ""
+
+
+output "jenkins_snapshot_id" {
+  value = local.jenkins_snapshot_id
 }
+

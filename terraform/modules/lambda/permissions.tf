@@ -65,8 +65,11 @@ resource "aws_iam_policy" "ssm_update_parameter_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = "ssm:PutParameter"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:PutParameter"
+        ]
         Resource = "*"
       }
     ]

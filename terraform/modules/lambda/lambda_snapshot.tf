@@ -1,6 +1,3 @@
-
-
-
 # using the same function as the other module. It doesn't really matter
 resource "aws_lambda_function" "lambda_jenkins" {
   function_name    = "lambda_jenkins"

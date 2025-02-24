@@ -36,3 +36,7 @@ variable "aws_s3_bucket_arn" {
   type    = string
   default = ""
 }
+variable "jenkins_volume_id" {
+  type    = string
+  default = ""
+}
