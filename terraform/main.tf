@@ -53,6 +53,13 @@ module "eventBridge" {
 }
 
 
+module "ecs_slave" {
+  source                     = "./modules/ecs_slave"
+  # jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
+  # s3_bucket_name             = var.s3_bucket_name
+  # aws_s3_bucket_arn=module.s3.aws_s3_bucket_arn
+}
+
 # module "ecs_master" {
 #   source                     = "./modules/ecs_master"
 #   jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url

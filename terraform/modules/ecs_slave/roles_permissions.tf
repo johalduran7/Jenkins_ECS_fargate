@@ -1,5 +1,6 @@
-resource "aws_iam_role" "ecs_execution_role" {
-  name = "ecs_execution_role"
+# ecs_task_execution role to allow the ecs agent to pull from ECR, etc
+resource "aws_iam_role" "ecs_task_execution_role_slave_jenkins" {
+  name = "ecs_task_execution_role_slave_jenkins"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -21,55 +22,36 @@ resource "aws_iam_role" "ecs_execution_role" {
 
 resource "aws_iam_policy_attachment" "ecs_execution_role_policy_attachment" {
   name       = "ecs_execution_role_policy_attachment"
-  roles      = [aws_iam_role.ecs_execution_role.name]
+  roles      = [aws_iam_role.ecs_task_execution_role_slave_jenkins.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# this is needed to run aws ecs execution-command
-resource "aws_iam_policy_attachment" "ecs_execution_role_ssm_attachment" {
-  name       = "ecs_execution_role_ssm_attachment"
-  roles      = [aws_iam_role.ecs_execution_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
 
-resource "aws_iam_policy" "ecs_execution_logging_policy" {
-  name        = "ECSExecutionLoggingPolicy"
-  description = "Allows ECS Execution Role to push logs to CloudWatch"
+
+# Add CloudWatch logging permissions to Execution Role
+resource "aws_iam_policy" "ecs_execution_logging_policy_slave_jenkins" {
+  name        = "ecs_execution_logging_policy_slave_jenkins"
+  description = "Allows ECS task execution to write logs to CloudWatch"
   policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogStream",
-          "logs:CreateLogGroup",
-          "logs:PutLogEvents",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:GetAuthorizationToken",
-          "ecs:DescribeTasks",
-          "ecs:ListTasks",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:RegisterTargets",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:DescribeImages",
-          "ecr:ListImages",
-        ],
-        "Resource" : "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
-      }
-    ]
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
+    }]
   })
 }
 
-resource "aws_iam_policy_attachment" "ecs_execution_role_logging_attachment" {
-  name       = "ecs_execution_role_logging_attachment"
-  roles      = [aws_iam_role.ecs_execution_role.name]
-  policy_arn = aws_iam_policy.ecs_execution_logging_policy.arn
+resource "aws_iam_policy_attachment" "ecs_execution_logging_attachment" {
+  name       = "ecs_execution_logging_attachment"
+  roles      = [aws_iam_role.ecs_task_execution_role_slave_jenkins.name]
+  policy_arn = aws_iam_policy.ecs_execution_logging_policy_slave_jenkins.arn
 }
 
 
-resource "aws_iam_role" "ecs_task_role" {
-  name = "ecs_task_role"
+## ecs_task_role for the task to interact with AWS services and permissions in general
+resource "aws_iam_role" "ecs_task_role_slave_jenkins" {
+  name = "ecs_task_role_slave_jenkins"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -85,121 +67,72 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
-# Example policy (adjust based on your task's needs)
-# resource "aws_iam_policy" "ecs_task_policy" {
-#   name = "ecs_task_policy"
-
-#   policy = jsonencode({
-#     "Version" : "2012-10-17",
-#     "Statement" : [
-#       {
-#         "Action" : [
-#           "s3:GetObject",
-#           "s3:PutObject"
-#         ],
-#         "Effect" : "Allow",
-#         "Resource" : "arn:aws:s3:::your-bucket-name/*"
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_policy_attachment" "ecs_task_role_policy_attachment" {
-#   name       = "ecs_task_role_policy_attachment_S3"
-#   roles      = [aws_iam_role.ecs_task_role.name]
-#   policy_arn = aws_iam_policy.ecs_task_policy.arn
-# }
-
-# policy for X-Ray
-# resource "aws_iam_policy" "xray_permissions" {
-#   name        = "XRayTaskPermissions"
-#   description = "Permissions for ECS tasks to send X-Ray traces"
-#   policy      = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect   = "Allow"
-#         Action   = [
-#           "xray:PutTraceSegments",
-#           "xray:PutTelemetryRecords"
-#         ]
-#         Resource = "*"
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_policy_attachment" "ecs_task_role_policy_attachment_xray" {
-#   name       = "ecs_task_role_policy_attachment_xray"
-#   roles      = [aws_iam_role.ecs_task_role.name]
-#   policy_arn = aws_iam_policy.xray_permissions.arn
-# }
-
-# #policy for  execute command so I can log into the tasks
-# resource "aws_iam_policy" "execute_command_policy" {
-#   name        = "ExecuteCommandPermissions"
-#   description = "Permissions for ECS tasks to use ExecuteCommand"
-#   policy = jsonencode({
-#     "Version" : "2012-10-17",
-#     "Statement" : [
-#       {
-#         "Effect" : "Allow",
-#         "Action" : [
-#           "ssmmessages:CreateControlChannel",
-#           "ssmmessages:CreateDataChannel",
-#           "ssmmessages:OpenControlChannel",
-#           "ssmmessages:OpenDataChannel"
-#         ],
-#         "Resource" : "*"
-#       },
-#       {
-#         "Effect" : "Allow",
-#         "Action" : [
-#           "logs:DescribeLogGroups"
-#         ],
-#         "Resource" : "*"
-#       },
-#       {
-#         "Effect" : "Allow",
-#         "Action" : [
-#           "logs:DescribeLogGroups",
-#           "logs:CreateLogStream",
-#           "logs:DescribeLogStreams",
-#           "logs:PutLogEvents"
-#         ],
-#         "Resource" : aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn
-#       }
-#     ]
-#   })
-# }
 
 
-# resource "aws_iam_policy_attachment" "ecs_task_role_execute_command_attachment" {
-#   name       = "ecs_task_role_execute_command_attachment"
-#   roles      = [aws_iam_role.ecs_task_role.name]
-#   policy_arn = aws_iam_policy.execute_command_policy.arn
-# }
+# Add CloudWatch logging permissions to Task Role
+resource "aws_iam_policy" "ecs_task_logging_policy_slave_jenkins" {
+  name        = "ecs_task_logging_policy_slave_jenkins"
+  description = "Allows ECS tasks to write logs to CloudWatch"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
+    }]
+  })
+}
 
+resource "aws_iam_policy_attachment" "ecs_task_logging_attachment_slave_jenkins" {
+  name       = "ecs_task_logging_attachment_slave_jenkins"
+  roles      = [aws_iam_role.ecs_task_role_slave_jenkins.name]
+  policy_arn = aws_iam_policy.ecs_task_logging_policy_slave_jenkins.arn
+}
 
-resource "aws_iam_policy" "ecs_task_logging" {
-  name        = "ecs_task_logging"
-  description = "Allows ECS tasks to send logs to CloudWatch"
-
+# To log into fargate task
+resource "aws_iam_policy" "ecs_ssm_exec" {
+  name        = "ECS_SSM_Execute_Command"
+  description = "Allows ECS tasks to use SSM Session Manager"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
+        Effect = "Allow"
+        Action = [
+          "ssm:StartSession",
+          "ssm:DescribeSessions",
+          "ssm:GetConnectionStatus",
+          "ssm:TerminateSession"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:session/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      },
+      {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:CreateLogGroup"]
-        Resource = "${aws_cloudwatch_log_group.ecs_cluster_cloudwatch.arn}:*"
+        Action   = "logs:CreateLogStream"
+        Resource = "*"
       }
     ]
   })
 }
 
-resource "aws_iam_policy_attachment" "ecs_task_logging_attach" {
-  name       = "ecs_task_logging_attach"
-  roles      = [aws_iam_role.ecs_task_role.name]
-  policy_arn = aws_iam_policy.ecs_task_logging.arn
+resource "aws_iam_role_policy_attachment" "ecs_ssm_exec_attach" {
+  role       = aws_iam_role.ecs_task_role_slave_jenkins.name
+  policy_arn = aws_iam_policy.ecs_ssm_exec.arn
 }
 
+# this is needed to run aws ecs execution-command
+resource "aws_iam_policy_attachment" "ecs_execution_role_ssm_attachment" {
+  name       = "ecs_execution_role_ssm_attachment"
+  roles      = [aws_iam_role.ecs_task_role_slave_jenkins.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
