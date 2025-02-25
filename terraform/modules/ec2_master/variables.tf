@@ -10,7 +10,7 @@ variable "env" {
 
 variable "aws_region" {
   description = "The AWS region to create resources in"
-  default     = "us-east-1"
+  default     = ""
 }
 
 variable "jenkins_ecr_repository_url" {
@@ -40,3 +40,34 @@ variable "jenkins_volume_id" {
   type    = string
   default = ""
 }
+
+variable "jekinks_cloud_name" {
+  type    = string
+  default = ""
+}
+
+variable "task_definition" {
+  type    = string
+  default = ""
+}
+
+variable "ecs_sg_id" {
+  type    = string
+  default = ""
+}
+
+variable "ecs_task_execution_role_slave_jenkins" {
+  type    = string
+  default = ""
+}
+
+variable "ecs_task_role_slave_jenkins" {
+  type    = string
+  default = ""
+}
+
+variable "jenkins_cluster_arn" {
+  type    = string
+  default = ""
+}
+

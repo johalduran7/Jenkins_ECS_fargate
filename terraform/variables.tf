@@ -19,6 +19,12 @@ variable "env" {
   default = "jenkins"
 }
 
+variable "jekinks_cloud_name" {
+  type    = string
+  default = "ecs_fargate_slaves"
+}
+
+
 # VPC CIDR Block
 variable "cidr_block" {
   description = "The CIDR block for the VPC"

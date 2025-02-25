@@ -1,12 +1,8 @@
+variable "aws_region" {
+  type    = string
+  default = ""
+}
 
-# data "aws_ebs_snapshot" "latest_jenkins_snapshot" {
-#   most_recent = true
-
-#   filter {
-#     name   = "tag:Name"
-#     values = ["jenkins_backup"]
-#   }
-# }
 resource "aws_ssm_parameter" "latest_snapshot_id" {
   name  = "/jenkins/latest_snapshot_id"
   type  = "String"
@@ -29,7 +25,7 @@ locals {
 
 resource "aws_ebs_volume" "jenkins_volume" {
   #count             = length(data.aws_ebs_snapshot.latest_jenkins_snapshot.id) > 0 ? 1 : 0
-  availability_zone = "us-east-1a"
+  availability_zone = "${var.aws_region}a"
   # If a snapshot exists, use it; otherwise, create a new volume
   snapshot_id = local.jenkins_snapshot_id != "null" ? local.jenkins_snapshot_id : null
   size        = local.jenkins_snapshot_id == "null" ? 4 : null # Set size only for fresh volumes

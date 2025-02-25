@@ -26,16 +26,31 @@ module "s3" {
 }
 
 module "ebs" {
-  source = "./modules/ebs"
+  source     = "./modules/ebs"
+  aws_region = var.aws_region
 
 }
 
+module "ecs_slave" {
+  source             = "./modules/ecs_slave"
+  jekinks_cloud_name = var.jekinks_cloud_name
+}
+
+
+
 module "ec2_master" {
-  source                     = "./modules/ec2_master"
-  jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
-  s3_bucket_name             = var.s3_bucket_name
-  aws_s3_bucket_arn          = module.s3.aws_s3_bucket_arn
-  jenkins_volume_id          = module.ebs.jenkins_volume_id
+  source                                = "./modules/ec2_master"
+  jenkins_ecr_repository_url            = module.ecr.jenkins_ecr_repository_url
+  s3_bucket_name                        = var.s3_bucket_name
+  aws_s3_bucket_arn                     = module.s3.aws_s3_bucket_arn
+  jenkins_volume_id                     = module.ebs.jenkins_volume_id
+  aws_region                            = var.aws_region
+  jekinks_cloud_name                    = var.jekinks_cloud_name
+  task_definition                       = module.ecs_slave.task_definition
+  ecs_sg_id                             = module.ecs_slave.ecs_sg_id
+  ecs_task_execution_role_slave_jenkins = module.ecs_slave.ecs_task_execution_role_slave_jenkins
+  ecs_task_role_slave_jenkins           = module.ecs_slave.ecs_task_role_slave_jenkins
+  jenkins_cluster_arn                   = module.ecs_slave.jenkins_cluster_arn
 }
 
 
@@ -53,16 +68,3 @@ module "eventBridge" {
 }
 
 
-module "ecs_slave" {
-  source                     = "./modules/ecs_slave"
-  # jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
-  # s3_bucket_name             = var.s3_bucket_name
-  # aws_s3_bucket_arn=module.s3.aws_s3_bucket_arn
-}
-
-# module "ecs_master" {
-#   source                     = "./modules/ecs_master"
-#   jenkins_ecr_repository_url = module.ecr.jenkins_ecr_repository_url
-#   s3_bucket_name             = var.s3_bucket_name
-#   aws_s3_bucket_arn=module.s3.aws_s3_bucket_arn
-# }

@@ -27,17 +27,8 @@ resource "aws_instance" "jenkins_master" {
   key_name               = aws_key_pair.deployer.key_name # Replace with your key pair
   vpc_security_group_ids = [aws_security_group.sg_ssh.id, aws_security_group.sg_web.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
-  availability_zone      = "us-east-1a"
+  availability_zone      = "${var.aws_region}a"
 
-  #user_data = filebase64(var.path_user_data)
-  # Configure Spot Instance
-  # instance_market_options {
-  #   market_type = "spot"
-  #   spot_options {
-  #     max_price          = "0.03"     # Set your maximum bid price (e.g., $0.03/hour)
-  #     spot_instance_type = "one-time" # Use "persistent" for long-running workloads
-  #   }
-  # }
   # aws ec2 describe-spot-price-history \
   #       --instance-types t2.micro \
   #       --availability-zone us-east-1a \
@@ -122,6 +113,7 @@ resource "aws_instance" "jenkins_master" {
   tags = {
     Name      = "jenkins_master"
     Terraform = "yes"
+    Volume_id = var.jenkins_volume_id
   }
 
 }

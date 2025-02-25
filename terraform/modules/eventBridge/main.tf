@@ -6,7 +6,7 @@ resource "aws_cloudwatch_event_rule" "instance_shutdown" {
     source        = ["aws.ec2"]
     "detail-type" = ["EC2 Instance State-change Notification"]
     detail = {
-      state = ["shutting-down", "terminated"]
+      state = ["shutting-down"]
     }
   })
 }
@@ -28,14 +28,13 @@ resource "aws_lambda_permission" "eventbridge_permission" {
 # EventBridge config for lambda funciton to delete the volume once the snapshot is taken
 resource "aws_cloudwatch_event_rule" "delete_volume" {
   name        = "delete_volume"
-  description = "Trigger Lambda when the snapshot is taken"
+  description = "Trigger Lambda when the state of the instance changes to terminated"
 
   event_pattern = jsonencode({
     source        = ["aws.ec2"]
-    "detail-type" = ["EBS Snapshot Notification"]
+    "detail-type" = ["EC2 Instance State-change Notification"]
     detail = {
-      event  = ["createSnapshot"]
-      result = ["succeeded"]
+      state = ["terminated"]
     }
   })
 }

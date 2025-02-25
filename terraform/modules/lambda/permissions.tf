@@ -85,13 +85,13 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_update_policy" {
 resource "aws_iam_policy" "lambda_delete_volume_policy" {
   name        = "lambda_delete_volume_policy"
   description = "Policy to allow Lambda to delete EBS volumes"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "ec2:DetachVolume",
           "ec2:DeleteVolume"
         ]

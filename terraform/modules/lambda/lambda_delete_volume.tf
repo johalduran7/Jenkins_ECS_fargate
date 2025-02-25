@@ -2,7 +2,7 @@
 resource "aws_lambda_function" "lambda_jenkins_delete_volume" {
   function_name    = "lambda_jenkins_delete_volume"
   handler          = "lambda_function_delete_volume.handler" # Python handler
-  runtime          = "python3.9"               # Specify the Python runtime version
+  runtime          = "python3.9"                             # Specify the Python runtime version
   role             = aws_iam_role.lambda_role_jenkins.arn
   timeout          = 10
   source_code_hash = filebase64sha256("modules/lambda/lambda_function_delete_volume.zip")
