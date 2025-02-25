@@ -20,6 +20,17 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+data "aws_subnets" "az_a_subnets" {
+  filter {
+    name   = "availability-zone"
+    values = ["${var.aws_region}a"]  # Change this to your desired AZ
+  }
+}
+
+data "aws_subnet" "selected_subnet" {
+  id = tolist(data.aws_subnets.az_a_subnets.ids)[0]
+}
+
 
 resource "aws_instance" "jenkins_master" {
   ami                    = data.aws_ami.amazon_linux.id # Replace with your desired AMI
@@ -27,7 +38,8 @@ resource "aws_instance" "jenkins_master" {
   key_name               = aws_key_pair.deployer.key_name # Replace with your key pair
   vpc_security_group_ids = [aws_security_group.sg_ssh.id, aws_security_group.sg_web.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
-  availability_zone      = "${var.aws_region}a"
+  #availability_zone      = "${var.aws_region}a"
+  subnet_id              = "${data.aws_subnet.selected_subnet.id}"
 
   # aws ec2 describe-spot-price-history \
   #       --instance-types t2.micro \
@@ -61,6 +73,7 @@ resource "aws_instance" "jenkins_master" {
     aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${var.jenkins_ecr_repository_url}
     TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
     INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/instance-id")
+    PRIVATE_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/local-ipv4")
 
     # Pull the latest Jenkins image
     docker pull ${var.jenkins_ecr_repository_url}:latest
@@ -83,6 +96,50 @@ resource "aws_instance" "jenkins_master" {
     sudo mkdir -p /mnt/jenkins_data
     sudo rm -rf /mnt/jenkins_data/*
     sudo mount /dev/xvdf /mnt/jenkins_data
+    CONFIG_FILE="/mnt/jenkins_data/config.xml"
+    update_config_xml() {
+      TASK_DEFINITION="${var.task_definition}"
+      SUBNET="${data.aws_subnet.selected_subnet.id}"
+      SECURITY_GROUP="${var.ecs_sg_id}"
+      TASK_ROLE="${var.ecs_task_execution_role_slave_jenkins}"
+      EXECUTION_ROLE="${var.ecs_task_execution_role_slave_jenkins}"
+      CLUSTER="${var.jenkins_cluster_arn}"
+      REGION="${var.aws_region}"
+      JENKINS_URL="http://$PRIVATE_IP:8080"
+      
+
+      awk -v task="$TASK_DEFINITION" \
+          -v subnet="$SUBNET" \
+          -v sg="$SECURITY_GROUP" \
+          -v taskrole="$TASK_ROLE" \
+          -v executionrole="$EXECUTION_ROLE" \
+          -v cluster="$CLUSTER" \
+          -v region="$REGION" \
+          -v jenkins_url="$JENKINS_URL" '
+      BEGIN {inside_ecs=0; inside_fargate=0} 
+
+      # Identify ECS task definition block
+      /<label>${var.jenkins_cloud_name}<\/label>/ {inside_ecs=1} 
+      inside_ecs && /<taskDefinitionOverride>/ {sub(/>.*</, ">" task "<")} 
+      inside_ecs && /<subnets>/ {sub(/>.*</, ">" subnet "<")} 
+      inside_ecs && /<securityGroups>/ {sub(/>.*</, ">" sg "<")} 
+      inside_ecs && /<taskrole>/ {sub(/>.*</, ">" taskrole "<")} 
+      inside_ecs && /<executionRole>/ {sub(/>.*</, ">" executionrole "<")} 
+      inside_ecs && /<\/cloud>/ {inside_ecs=0} 
+
+      # Identify Fargate block
+      /<name>${var.jenkins_cloud_name}<\/name>/ {inside_fargate=1} 
+      inside_fargate && /<cluster>/ {sub(/>.*</, ">" cluster "<")} 
+      inside_fargate && /<regionName>/ {sub(/>.*</, ">" region "<")} 
+      inside_fargate && /<jenkinsUrl>/ {sub(/>.*</, ">" jenkins_url "<")}
+      inside_fargate && /<\/cloud>/ {inside_fargate=0} 
+
+      {print}' "$CONFIG_FILE" > config.xml.tmp && mv config.xml.tmp "$CONFIG_FILE"
+    }
+
+    if grep "<name>${var.jenkins_cloud_name}</name> *$" "$CONFIG_FILE" "$CONFIG_FILE"; then
+      update_config_xml
+    fi
 
     if [[ -z "$SNAPSHOT_ID" || "$SNAPSHOT_ID" == "null" ]]; then
       echo "No snapshot found. Pulling data from S3 backup."

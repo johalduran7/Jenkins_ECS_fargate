@@ -1,6 +1,6 @@
 # using the same function as the other module. It doesn't really matter
 resource "aws_lambda_function" "lambda_jenkins" {
-  function_name    = "lambda_jenkins"
+  function_name    = "lambda_jenkins_snapshot"
   handler          = "lambda_function.handler" # Python handler
   runtime          = "python3.9"               # Specify the Python runtime version
   role             = aws_iam_role.lambda_role_jenkins.arn

@@ -28,7 +28,7 @@ variable "JENKINS_AGENT_NAME" {
   default = "ecs"
 }
 
-variable "jekinks_cloud_name" {
+variable "jenkins_cloud_name" {
   type    = string
   default = ""
 }

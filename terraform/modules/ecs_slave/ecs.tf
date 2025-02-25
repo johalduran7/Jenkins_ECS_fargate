@@ -55,7 +55,7 @@ resource "aws_security_group" "ecs_sg" {
 
 
 resource "aws_ecs_task_definition" "jenkins_slave_fargate_task" {
-  family                   = var.jekinks_cloud_name
+  family                   = var.jenkins_cloud_name
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "1024"
@@ -85,7 +85,6 @@ resource "aws_ecs_task_definition" "jenkins_slave_fargate_task" {
       }
     ]
     environment = [
-      { "name" : "JENKINS_URL", "value" : "http://ec2-54-83-93-126.compute-1.amazonaws.com:8080" },
       { "name" : "workDir", "value" : "/home/jenkins" }
 
     ]

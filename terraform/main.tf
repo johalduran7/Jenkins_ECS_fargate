@@ -33,7 +33,7 @@ module "ebs" {
 
 module "ecs_slave" {
   source             = "./modules/ecs_slave"
-  jekinks_cloud_name = var.jekinks_cloud_name
+  jenkins_cloud_name = var.jenkins_cloud_name
 }
 
 
@@ -45,7 +45,7 @@ module "ec2_master" {
   aws_s3_bucket_arn                     = module.s3.aws_s3_bucket_arn
   jenkins_volume_id                     = module.ebs.jenkins_volume_id
   aws_region                            = var.aws_region
-  jekinks_cloud_name                    = var.jekinks_cloud_name
+  jenkins_cloud_name                    = var.jenkins_cloud_name
   task_definition                       = module.ecs_slave.task_definition
   ecs_sg_id                             = module.ecs_slave.ecs_sg_id
   ecs_task_execution_role_slave_jenkins = module.ecs_slave.ecs_task_execution_role_slave_jenkins

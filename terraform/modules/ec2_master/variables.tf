@@ -41,7 +41,7 @@ variable "jenkins_volume_id" {
   default = ""
 }
 
-variable "jekinks_cloud_name" {
+variable "jenkins_cloud_name" {
   type    = string
   default = ""
 }
