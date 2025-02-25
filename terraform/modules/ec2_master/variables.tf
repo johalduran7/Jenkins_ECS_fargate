@@ -5,7 +5,7 @@ variable "path_user_data" {
 
 variable "env" {
   type    = string
-  default = "jenkins"
+  default = ""
 }
 
 variable "aws_region" {

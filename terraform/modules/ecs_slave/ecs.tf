@@ -36,7 +36,7 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
 }
 
 resource "aws_security_group" "ecs_sg" {
-  name   = "ecs_cluster_sg"
+  name   = "${var.env}-sg_ecs_cluster_slaves"
   vpc_id = var.vpc_id # Ensure to provide the VPC ID in the variables
   # Jenkins master access through AWS CLI, no need ingress
   egress {
@@ -47,7 +47,7 @@ resource "aws_security_group" "ecs_sg" {
   }
 
   tags = {
-    Name      = "ECS Cluster SG"
+    Name      = "${var.env}-sg_ecs_cluster_slaves"
     Terraform = "yes"
   }
 }

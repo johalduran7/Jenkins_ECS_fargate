@@ -23,7 +23,7 @@ data "aws_ami" "amazon_linux" {
 data "aws_subnets" "az_a_subnets" {
   filter {
     name   = "availability-zone"
-    values = ["${var.aws_region}a"]  # Change this to your desired AZ
+    values = ["${var.aws_region}a"] # Change this to your desired AZ
   }
 }
 
@@ -39,7 +39,7 @@ resource "aws_instance" "jenkins_master" {
   vpc_security_group_ids = [aws_security_group.sg_ssh.id, aws_security_group.sg_web.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
   #availability_zone      = "${var.aws_region}a"
-  subnet_id              = "${data.aws_subnet.selected_subnet.id}"
+  subnet_id = data.aws_subnet.selected_subnet.id
 
   # aws ec2 describe-spot-price-history \
   #       --instance-types t2.micro \
