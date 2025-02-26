@@ -17,6 +17,7 @@
 # }
 module "ecr" {
   source        = "./modules/ecr"
+  aws_region     = var.aws_region
   ecr_repo_name = var.ecr_repo_name
 }
 
@@ -35,6 +36,7 @@ module "ecs_slave" {
   source             = "./modules/ecs_slave"
   env                = var.env
   jenkins_cloud_name = var.jenkins_cloud_name
+  jenkins_slave_repository_url = module.ecr.jenkins_slave_repository_url
 }
 
 

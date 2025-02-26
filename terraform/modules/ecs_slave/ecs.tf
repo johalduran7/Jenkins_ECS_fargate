@@ -65,7 +65,7 @@ resource "aws_ecs_task_definition" "jenkins_slave_fargate_task" {
   # you can define up to 10 containers per task definition
   container_definitions = jsonencode([{
     name      = "jenkins-slave"
-    image     = "jenkins/inbound-agent:alpine"
+    image     = "${var.jenkins_slave_repository_url}:latest"
     cpu       = 1024
     memory    = 2048
     essential = true

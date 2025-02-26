@@ -1,6 +1,9 @@
+variable "aws_region" {
+  default     = ""
+}
 variable "ecr_repo_name" {
   type    = string
-  default = "jenkins"
+  default = ""
 }
 
 
