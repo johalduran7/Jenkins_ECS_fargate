@@ -62,6 +62,7 @@ resource "aws_ecs_task_definition" "jenkins_slave_fargate_task" {
   memory                   = "2048"
 
 
+
   # you can define up to 10 containers per task definition
   container_definitions = jsonencode([{
     name      = "jenkins-slave"
@@ -99,6 +100,7 @@ resource "aws_ecs_task_definition" "jenkins_slave_fargate_task" {
     }
 
   }])
+
 
 
 

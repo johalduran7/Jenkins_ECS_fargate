@@ -136,3 +136,44 @@ resource "aws_iam_policy_attachment" "ecs_execution_role_ssm_attachment" {
   roles      = [aws_iam_role.ecs_task_role_slave_jenkins.name]
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
+
+resource "aws_iam_policy" "fargate_ecr_push_policy" {
+  name        = "FargateECRPushPolicy"
+  description = "Allows Fargate task to push images to ECR"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ecr:GetAuthorizationToken"
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ]
+        Resource = "arn:aws:ecr:us-east-1:123456789012:repository/my-repo"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/ecs/my-fargate-task:*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_fargate_ecr_push" {
+  role       = aws_iam_role.ecs_task_role_slave_jenkins.name
+  policy_arn = aws_iam_policy.fargate_ecr_push_policy.arn
+}
