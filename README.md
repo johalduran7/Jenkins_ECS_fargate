@@ -5,7 +5,7 @@ This project provisions a **Jenkins Master on EC2** and **Jenkins Slave Agents o
 - **Reducing idle instance time** with automated backup of volumes and restore mechanisms.
 - **Using Fargate for on-demand Jenkins Slaves**, eliminating always-on EC2 nodes.
 - **Implementing Kaniko** for building Docker images without requiring privileged mode (Docker-in-Docker restriction).
-
+![Setup](./resources/Jenkins_ECS.jpg)
 
 ## 🎯 Key Features
 ✅ **Jenkins Master on EC2**
