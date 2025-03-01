@@ -18,6 +18,7 @@
 !Dockerfile
 CoPilot/**/*
 !CoPilot/**/Dockerfile
+!.gitkeep
 
 # Whitelist the .gitignore file itself
 !.gitignore
