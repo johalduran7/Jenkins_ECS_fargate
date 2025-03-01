@@ -177,3 +177,36 @@ resource "aws_iam_role_policy_attachment" "attach_fargate_ecr_push" {
   role       = aws_iam_role.ecs_task_role_slave_jenkins.name
   policy_arn = aws_iam_policy.fargate_ecr_push_policy.arn
 }
+
+resource "aws_iam_policy" "ecs_task_role_slave_jenkins_ecr_push" {
+  name        = "ecs-task-role-slave-jenkins-ecr-push"
+  description = "Allow Jenkins slaves to push images to ECR"
+  policy      = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_role_slave_jenkins_ecr_push_attach" {
+  role       = aws_iam_role.ecs_task_role_slave_jenkins.name
+  policy_arn = aws_iam_policy.ecs_task_role_slave_jenkins_ecr_push.arn
+}
