@@ -60,6 +60,3 @@ ssh -L 8080:localhost:8080 ec2-user@<public-ip>
 ## 📌 Future Enhancements
 - Automating security mode to deploy VPN and NAT (More expensive option)
 
----
-
-> **Contributors:** [@jduran](https://github.com/jduran) 🛠️
