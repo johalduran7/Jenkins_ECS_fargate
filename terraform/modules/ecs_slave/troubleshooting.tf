@@ -113,7 +113,7 @@ resource "aws_ecs_service" "fargate_service" {
   name                   = "jenkins_fargate_service_test"
   cluster                = aws_ecs_cluster.jenkins_cluster.id
   task_definition        = aws_ecs_task_definition.jenkins_slave_fargate_task_test.arn
-  desired_count          = 1
+  desired_count          = 0
   launch_type            = "FARGATE"
   enable_execute_command = true # this is needed to run $ aws ecs execute-command
 
