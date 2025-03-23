@@ -181,7 +181,7 @@ resource "aws_iam_role_policy_attachment" "attach_fargate_ecr_push" {
 resource "aws_iam_policy" "ecs_task_role_slave_jenkins_ecr_push" {
   name        = "ecs-task-role-slave-jenkins-ecr-push"
   description = "Allow Jenkins slaves to push images to ECR"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {

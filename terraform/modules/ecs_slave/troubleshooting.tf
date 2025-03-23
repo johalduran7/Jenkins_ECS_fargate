@@ -80,8 +80,8 @@ resource "aws_ecs_task_definition" "jenkins_slave_fargate_task_test" {
 
     ]
     entryPoint = ["/bin/sh", "-c"]
-    command   = ["while true; do sleep 30; done"]
-    
+    command    = ["while true; do sleep 30; done"]
+
 
     logConfiguration = {
       logDriver = "awslogs"

@@ -16,8 +16,6 @@
 !*.txt
 !*.sh
 !Dockerfile
-CoPilot/**/*
-!CoPilot/**/Dockerfile
 !.gitkeep
 
 # Whitelist the .gitignore file itself
@@ -26,5 +24,3 @@ CoPilot/**/*
 # Optional: Whitelist directories (to allow file inclusion in them)
 !*/
 .terraform/
-modules/lambda/lambda_layer/my-layer/*
-modules/beanstalk/sample-application/*

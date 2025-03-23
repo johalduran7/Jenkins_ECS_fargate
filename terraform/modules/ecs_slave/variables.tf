@@ -38,7 +38,7 @@ variable "jenkins_cloud_name" {
   default = ""
 }
 
-variable jenkins_slave_repository_url {
-  type        = string
-  default     = ""
+variable "jenkins_slave_repository_url" {
+  type    = string
+  default = ""
 }

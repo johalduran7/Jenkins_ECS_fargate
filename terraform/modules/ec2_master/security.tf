@@ -37,7 +37,7 @@ resource "aws_security_group" "sg_web" {
     from_port       = 50000
     to_port         = 50000
     protocol        = "tcp"
-    security_groups = [var.ecs_sg_id]  # Replace with the actual security group reference
+    security_groups = [var.ecs_sg_id] # Replace with the actual security group reference
   }
 
   egress {

@@ -1,23 +1,18 @@
-variable "aws_region" {
-  default = ""
-}
-variable "ecr_repo_name" {
-  type    = string
-  default = ""
+provider "aws" {
+  region = "us-east-1"
 }
 
-
-resource "aws_ecr_repository" "jenkins" {
-  name                 = var.ecr_repo_name
+# Repository created for the pipeline to push the image of the app
+resource "aws_ecr_repository" "kaniko_demo" {
+  name                 = "kaniko_demo"
   image_tag_mutability = "MUTABLE"
   image_scanning_configuration {
     scan_on_push = true
   }
 }
 
-
-resource "aws_ecr_lifecycle_policy" "ecr_jenkins_policy" {
-  repository = aws_ecr_repository.jenkins.name
+resource "aws_ecr_lifecycle_policy" "ecr_kaniko_demo_policy {
+  repository = aws_ecr_repository.kaniko_demo.name
 
   policy = <<EOF
 {
