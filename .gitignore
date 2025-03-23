@@ -18,6 +18,7 @@
 !.gitkeep
 !*.js
 !*.json
+!Jenkinsfile
 config.json
 
 # Whitelist the .gitignore file itself

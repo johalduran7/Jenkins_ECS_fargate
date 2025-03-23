@@ -1,0 +1,105 @@
+def ENVIRONMENT = 'master'
+def VERSION = '3.2.1'
+def ECR_REPO_NAME = 'kaniko_demo'
+def aws_region = 'us-east-1'
+def ECR_REGISTRY = ''
+pipeline {
+    agent {
+        label 'ecs_fargate_slaves_default'
+    }
+    tools {
+        terraform 'Terraform 1.9.5 amd64'
+    }
+
+    stages {
+        stage('Detect Branch') {
+            steps {
+                script {
+                    sh 'printenv'
+                    if ( !env.GIT_BRANCH?.trim() ) {
+                        // Execute the git command to find the branch containing the commit
+                        def branchOutput = sh(
+                            script: """
+                                git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        echo "Raw output of git branch -r --contains: ${branchOutput}"
+
+                        // Ensure branchOutput is not empty
+                        if (branchOutput.isEmpty()) {
+                            error "Commit ${env.GIT_COMMIT} not found in any branch."
+                        } else {
+                            ENVIRONMENT="${branchOutput}"
+                            println("Detected branch: ${ENVIRONMENT}")
+
+                        }
+                    }else {
+                        def branchOutputNoCommit = sh(
+                            script: """
+                                echo ${env.GIT_BRANCH} | sed 's| *origin/||'
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        ENVIRONMENT="${branchOutputNoCommit}"
+                        println("Detected branch no commit condition: ${ENVIRONMENT}")
+
+                    }
+
+                }
+            }
+        }
+
+        stage('Build and push') {
+            steps {
+                script {
+                    // Checkout repository
+                    checkout scm
+                    println("aws_region: ${aws_region}")
+                    withCredentials([[ 
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]
+                        ]){
+                            
+                            
+                            def outputRegistry = sh (
+                                script: """
+                                ECR_REGISTRY="\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${aws_region}.amazonaws.com"
+                                echo "\$ECR_REGISTRY"
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            ECR_REGISTRY=outputRegistry
+                            //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
+                            println("ECR_REGISTRY: ${ECR_REGISTRY}")
+
+                            def outputBuildTagPush = sh (
+                                script: """
+
+                                echo "PWD before kaniko:" \$(pwd)
+                                cd app/src/
+                                # Run Kaniko executor directly (since it's installed in the agent)
+                                /kaniko/executor \
+                                    --context=dir://\$(pwd)/ \
+                                    --dockerfile=\$(pwd)/Dockerfile \
+                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache=true \
+                                    --cache-dir=/kaniko/cache                    
+                                """,
+                                returnStdout: true
+                            ).trim()
+                                                   
+                    }
+                
+                }
+            }
+
+        }
+
+    }
+}
