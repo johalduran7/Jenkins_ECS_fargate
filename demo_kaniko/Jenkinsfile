@@ -66,6 +66,7 @@ pipeline {
                         ],string(credentialsId: 'TF_VAR_ssh_public_key', variable: 'TF_VAR_ssh_public_key') 
                         ]){
                         sh """
+                            ls -lrtha
                             terraform init
                             terraform apply -auto-approve
                         """
