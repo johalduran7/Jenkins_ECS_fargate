@@ -1,10 +1,9 @@
 # Ignore everything by default
 *
-!**/
 *.md
 *.deb
 *key_*
-*.pem
+*.pemsss
 
 # Whitelist specific file types
 !*.tf
@@ -17,6 +16,9 @@
 !*.sh
 !Dockerfile
 !.gitkeep
+!*.js
+!*.json
+config.json
 
 # Whitelist the .gitignore file itself
 !.gitignore
