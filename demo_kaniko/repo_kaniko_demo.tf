@@ -11,7 +11,7 @@ resource "aws_ecr_repository" "kaniko_demo" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "ecr_kaniko_demo_policy {
+resource "aws_ecr_lifecycle_policy" "ecr_kaniko_demo_policy" {
   repository = aws_ecr_repository.kaniko_demo.name
 
   policy = <<EOF
