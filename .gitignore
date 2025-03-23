@@ -20,7 +20,7 @@
 !*.json
 !Jenkinsfile
 config.json
-
+local_doc.txt
 # Whitelist the .gitignore file itself
 !.gitignore
 
