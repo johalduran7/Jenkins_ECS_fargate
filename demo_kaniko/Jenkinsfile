@@ -51,6 +51,31 @@ pipeline {
             }
         }
 
+        stage('Terraform Apply') {
+            when {
+                expression { return !version_exists }
+            }
+            steps {
+                script {
+                    // Checkout repository
+                    checkout scm
+                    // Setup Terraform with environment variables
+                    withCredentials([[ 
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ],string(credentialsId: 'TF_VAR_ssh_public_key', variable: 'TF_VAR_ssh_public_key') 
+                        ]){
+                        sh """
+                            cd app/terraform/
+                            terraform apply -auto-approve
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Build and push') {
             steps {
                 script {
