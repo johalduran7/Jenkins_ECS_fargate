@@ -33,13 +33,38 @@ This project provisions a **Jenkins Master on EC2** and **Jenkins Slave Agents o
 - **CI/CD & Containerization:** Jenkins, Kaniko, Docker
 
 ## 🚀 Deployment Steps
-### 1 Provision Infrastructure
+### Preparation
+- Create the backend:
+```bash
+$ aws s3api create-bucket --bucket jenkins-terraform-backend-john-duran --region 
+us-east-1
+$ aws s3api put-bucket-versioning --bucket jenkins-terraform-backend-john-duran 
+--versioning-configuration Status=Enabled
+$ aws dynamodb create-table \
+  --table-name jenkins_terraform_backend \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1
+ ## update your terraform backend config:
+ 	terraform {
+	  backend "s3" {
+	    bucket         = "jenkins-terraform-backend-john-duran"
+	    key            = "terraform/state.tfstate"
+	    region         = "us-east-1"
+	    dynamodb_table = "jenkins_terraform_backend"
+	    encrypt        = true
+	  }
+	}
+```
+
+### 1. Provision Infrastructure
 ```sh
 cd terraform
 terraform init
 terraform apply -auto-approve
 ```
-### 2 Access Jenkins
+### 2. Access Jenkins
 - Use **AWS SSM** to connect securely:
 ```sh
 aws ssm start-session --target <instance-id>
@@ -48,17 +73,17 @@ aws ssm start-session --target <instance-id>
 ```sh
 ssh -L 8080:localhost:8080 ec2-user@<public-ip>
 ```
-### 3 Backup the local volumes of Jenkins 
+### 3. Backup the local volumes of Jenkins 
 If you have your Jenkins running in docker, you can backup the volumes as follows. You can back up the volumes in a similar way. The script backups the volumes and stores them on S3
 ```sh
 bash ./scripts/backup_jenkins_volume.sh
 ```
-### 4 Push the local image of Jenkins to ECR. 
+### 4. Push the local image of Jenkins to ECR. 
 You can build your own docker image for your EC2 master as you wish, then, the following script will push it to ECR.
 ```sh
 bash ./scripts/push_jenkins_to_ECR.sh
 ```
-### 5 Demo Kaniko
+### 5. Demo Kaniko
 I added a pipeline to build a simple image for a NodeJS app and push it to ECR. This is important because AWS Fargate Tasks is serverless, meaning that the underlying infrastructure is managed by AWS so we cannot configure a Docker daemon. Kaniko allows us to build an image without the necessity of a daemon. 
 1. Create a pipeline for our Kaniko demo app:
    ![Setup](./resources/kaniko_demo.jpg)
