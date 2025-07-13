@@ -57,14 +57,17 @@ $ aws dynamodb create-table \
 	  }
 	}
 ```
+### 1. Make sure you have Jenkins running locally.
+- If you don't have Jenkins runnign locally on docker, follow the steps script/push_jenkins_to_ECR.sh
+- Configure your AWS account in the file terraform/modules/ecr/config.json
 
-### 1. Provision Infrastructure
+### 2. Provision Infrastructure
 ```sh
 cd terraform
 terraform init
 terraform apply -auto-approve
 ```
-### 2. Access Jenkins
+### 3. Access Jenkins
 - Use **AWS SSM** to connect securely:
 ```sh
 aws ssm start-session --target <instance-id>
@@ -73,17 +76,17 @@ aws ssm start-session --target <instance-id>
 ```sh
 ssh -L 8080:localhost:8080 ec2-user@<public-ip>
 ```
-### 3. Backup the local volumes of Jenkins 
+### 4. Backup the local volumes of Jenkins 
 If you have your Jenkins running in docker, you can backup the volumes as follows. You can back up the volumes in a similar way. The script backups the volumes and stores them on S3
 ```sh
 bash ./scripts/backup_jenkins_volume.sh
 ```
-### 4. Push the local image of Jenkins to ECR. 
+### 5. Push the local image of Jenkins to ECR. 
 You can build your own docker image for your EC2 master as you wish, then, the following script will push it to ECR.
 ```sh
 bash ./scripts/push_jenkins_to_ECR.sh
 ```
-### 5. Demo Kaniko
+### 6. Demo Kaniko
 I added a pipeline to build a simple image for a NodeJS app and push it to ECR. This is important because AWS Fargate Tasks is serverless, meaning that the underlying infrastructure is managed by AWS so we cannot configure a Docker daemon. Kaniko allows us to build an image without the necessity of a daemon. 
 1. Create a pipeline for our Kaniko demo app:
    ![Setup](./resources/kaniko_demo.jpg)
