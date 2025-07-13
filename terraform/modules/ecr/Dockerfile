@@ -20,6 +20,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 # Copy Kaniko binaries to this image
 COPY --from=kaniko /kaniko/ /kaniko/
+# make sure you update the account in config.json_overrride and name it as config.json
 COPY config.json /kaniko/.docker/config.json
 
 # Set environment variables for Kaniko

@@ -7,6 +7,10 @@
 # $ bash push_jenkins_to_ecr.sh CONTAINER_NAME="jenkins" REPO_NAME="jenkins"
 # $ bash push_jenkins_to_ecr.sh CONTAINER_NAME="jenkins" REPO_NAME="jenkins" AWS_REGION="us-east-1"
 
+# If you don't have a local Jenkins installed, just install the container in jenkins_master. 
+# docker built -t jenkins .
+# then run: docker run -t -d --name jenkins jenkins
+
 # Load environment variables from script arguments if provided
 for arg in "$@"; do
   eval "$arg"
