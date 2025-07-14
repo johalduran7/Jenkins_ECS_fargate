@@ -160,7 +160,9 @@ resource "aws_instance" "jenkins_master" {
 
     # # Run Jenkins in Docker with the restored data
     echo "Running docker"
-    docker run -d --name jenkins -p 8080:8080 -p 50000:50000  -v /mnt/jenkins_data:/var/jenkins_home ${var.jenkins_ecr_repository_url}:latest
+    DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+    echo $DOCKER_GID  
+    docker run -d --name jenkins -p 8080:8080 -p 50000:50000  -v /mnt/jenkins_data:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock  --group-add $DOCKER_GID ${var.jenkins_ecr_repository_url}:latest
     # This parameter will be used by Lambda to confirm that this volume is backable at termination
     sleep 5
     if docker ps --format '{{.Names}}' | grep -q 'jenkins'; then
