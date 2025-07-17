@@ -13,7 +13,8 @@ data "aws_ami" "amazon_linux" {
     #values = ["al2023-ami-2023.6.20250128.0-kernel-6.1-x86_64"] # Amazon Linux 2 AMI
     #values = ["Amazon Linux 2023 AMI"]
     #values = ["al2023-ami-kernel-default-x86_64"]
-    values = ["al2023-ami-*-x86_64"]
+    #values = ["al2023-ami-*-x86_64"] #it increased the size of snapshot to 30GB
+    values = ["al2023-ami-2023.7.20250609.0-kernel-6.12-x86_64"]
   }
 
   filter {
@@ -21,6 +22,23 @@ data "aws_ami" "amazon_linux" {
     values = ["hvm"]
   }
 }
+
+# find the proper snapshot dependinng on the size
+# aws ec2 describe-images \
+#   --owners amazon \
+#   --filters "Name=name,Values=al2023-ami-*-x86_64" \
+#            "Name=virtualization-type,Values=hvm" \
+#   --query "Images[*].{
+#     AMI_ID: ImageId,
+#     Name: Name,
+#     Created: CreationDate,
+#     SnapshotId: BlockDeviceMappings[0].Ebs.SnapshotId
+#   }" \
+#   --output json | jq -r '.[] | [.AMI_ID, .Name, .Created, .SnapshotId] | @tsv' | while IFS=$'\t' read -r ami name date snapshot; do
+#   size=$(aws ec2 describe-snapshots --snapshot-ids "$snapshot" --query "Snapshots[0].VolumeSize" --output text)
+#   printf "%-20s %-55s %-25s %-20s %s GB\n" "$ami" "$name" "$date" "$snapshot" "$size"
+# done
+
 
 data "aws_subnets" "az_a_subnets" {
   filter {
